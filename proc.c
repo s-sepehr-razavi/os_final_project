@@ -532,3 +532,63 @@ procdump(void)
     cprintf("\n");
   }
 }
+
+// Clone added
+int clone(void (*fcn)(void*, void*), void *arg1, void *arg2, void* stack) {
+    struct proc *new_proc;
+    struct proc *p = myproc();
+
+    if ((new_proc = allocproc()) == 0) { // process allocation
+        return -1;
+    }
+
+    copy_process_state(new_proc, p);
+    setup_stack(new_proc, fcn, arg1, arg2, stack);
+    copy_file_descriptors(new_proc, p);
+    set_process_runnable(new_proc);
+
+    return new_proc->pid;
+}
+
+void copy_process_state(struct proc *new_proc, struct proc *parent) {
+    new_proc->pgdir = parent->pgdir;
+    new_proc->sz = parent->sz;
+    new_proc->parent = parent;
+    *new_proc->tf = *parent->tf;
+}
+
+void setup_stack(struct proc *new_proc, void (*fcn)(void*, void*), void *arg1, void *arg2, void *stack) {
+    void *sarg1, *sarg2, *sret;
+
+    sret = stack + PGSIZE - 3 * sizeof(void *);
+    *(uint*)sret = 0xFFFFFFF; // push return address to stack
+
+    sarg1 = stack + PGSIZE - 2 * sizeof(void *);
+    *(uint*)sarg1 = (uint)arg1; // push first argument to stack
+
+    sarg2 = stack + PGSIZE - 1 * sizeof(void *);
+    *(uint*)sarg2 = (uint)arg2; // push second argument to stack
+
+    new_proc->tf->esp = (uint)stack;
+    new_proc->threadstack = stack;
+    new_proc->tf->esp += PGSIZE - 3 * sizeof(void*);
+    new_proc->tf->ebp = new_proc->tf->esp;
+    new_proc->tf->eip = (uint)fcn;
+    new_proc->tf->eax = 0;
+}
+
+void copy_file_descriptors(struct proc *new_proc, struct proc *parent) {
+    for (int i = 0; i < NOFILE; i++) {
+        if (parent->ofile[i]) {
+            new_proc->ofile[i] = filedup(parent->ofile[i]);
+        }
+    }
+    new_proc->cwd = idup(parent->cwd);
+    safestrcpy(new_proc->name, parent->name, sizeof(parent->name));
+}
+
+void set_process_runnable(struct proc *new_proc) {
+    acquire(&ptable.lock);
+    new_proc->state = RUNNABLE;
+    release(&ptable.lock);
+}

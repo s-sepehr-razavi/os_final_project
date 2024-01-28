@@ -89,3 +89,18 @@ sys_uptime(void)
   release(&tickslock);
   return xticks;
 }
+
+// Creates a new process
+int sys_clone(void) {
+    int func, arg1, arg2, stack;
+
+    // Retrieve arguments for clone function
+    if (argint(0, &func) < 0 || 
+        argint(1, &arg1) < 0 || 
+        argint(2, &arg2) < 0 || 
+        argint(3, &stack) < 0) {
+        return -1; // Error handling in case argument retrieval fails
+    }
+
+    return clone((void *)func, (void *)arg1, (void *)arg2, (void *)stack);
+}

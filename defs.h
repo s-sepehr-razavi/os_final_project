@@ -155,6 +155,13 @@ int             argstr(int, char**);
 int             fetchint(uint, int*);
 int             fetchstr(uint, char**);
 void            syscall(void);
+int             clone(void(*fcn)(void*, void*), void*, void*, void*);
+
+// Forward declarations of helper functions
+void copy_process_state(struct proc *new_proc, struct proc *parent);
+void setup_stack(struct proc *new_proc, void (*fcn)(void*, void*), void *arg1, void *arg2, void *stack);
+void copy_file_descriptors(struct proc *new_proc, struct proc *parent);
+void set_process_runnable(struct proc *new_proc);
 
 // timer.c
 void            timerinit(void);
