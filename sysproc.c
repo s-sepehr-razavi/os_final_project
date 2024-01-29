@@ -104,3 +104,16 @@ int sys_clone(void) {
 
     return clone((void *)func, (void *)arg1, (void *)arg2, (void *)stack);
 }
+
+int sys_join(void) {
+    void **stack;
+    int arg;
+
+    // Retrieve the stack argument
+    if (argint(0, &arg) < 0) {
+        return -1; // Error handling in case argument retrieval fails
+    }
+
+    stack = (void **)arg;
+    return join(stack);
+}

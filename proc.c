@@ -592,3 +592,65 @@ void set_process_runnable(struct proc *new_proc) {
     new_proc->state = RUNNABLE;
     release(&ptable.lock);
 }
+
+int join(void** stack) {
+    struct proc *procs = myproc();
+    acquire(&ptable.lock);
+
+    for (;;) {
+        if (!has_active_children(procs)) {
+            release(&ptable.lock);
+            return -1; // No active children or the process is killed
+        }
+
+        int pid = clean_up_zombie_children(procs, stack);
+        if (pid > 0) {
+            release(&ptable.lock);
+            return pid;
+        }
+
+        sleep(procs, &ptable.lock); // Wait for children to exit
+    }
+}
+
+int has_active_children(struct proc *procs) {
+    struct proc *p;
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+        if (is_child_thread(p, procs)) {
+            return 1; // Active child found
+        }
+    }
+    return 0; // No active children
+}
+
+int is_child_thread(struct proc *p, struct proc *parent) {
+    return p->parent == parent && p->pgdir == parent->pgdir;
+}
+
+int clean_up_zombie_children(struct proc *procs, void** stack) {
+    struct proc *p;
+    for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
+        if (is_child_thread(p, procs) && p->state == ZOMBIE) {
+            int pid = p->pid;
+            clean_up_zombie_process(p, stack);
+            return pid;
+        }
+    }
+    return 0; // No zombie children cleaned up
+}
+
+void clean_up_zombie_process(struct proc *p, void** stack) {
+    kfree(p->kstack);
+    p->kstack = 0;
+    reset_process_state(p);
+    *stack = p->threadstack;
+    p->threadstack = 0;
+}
+
+void reset_process_state(struct proc *p) {
+    p->pid = 0;
+    p->parent = 0;
+    p->name[0] = 0;
+    p->killed = 0;
+    p->state = UNUSED;
+}
