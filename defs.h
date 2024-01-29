@@ -9,6 +9,7 @@ struct spinlock;
 struct sleeplock;
 struct stat;
 struct superblock;
+struct proc_info;
 
 // bio.c
 void            binit(void);
@@ -103,6 +104,7 @@ int             pipewrite(struct pipe*, char*, int);
 
 //PAGEBREAK: 16
 // proc.c
+void            proc_dump(struct proc_info *process, int *size);
 int             cpuid(void);
 void            exit(void);
 int             fork(void);
@@ -156,17 +158,15 @@ int             fetchint(uint, int*);
 int             fetchstr(uint, char**);
 void            syscall(void);
 int             clone(void(*fcn)(void*, void*), void*, void*, void*);
-int             join(void**);
-
+int             join(void** ,int *);
 // Forward declarations of helper functions
 void copy_process_state(struct proc *new_proc, struct proc *parent);
 void setup_stack(struct proc *new_proc, void (*fcn)(void*, void*), void *arg1, void *arg2, void *stack);
 void copy_file_descriptors(struct proc *new_proc, struct proc *parent);
 void set_process_runnable(struct proc *new_proc);
-
-int has_active_children(struct proc *procs);
-int is_child_thread(struct proc *p, struct proc *parent);
-int clean_up_zombie_children(struct proc *procs, void** stack);
+int has_active_children(struct proc *procs,int *pid);
+int is_child_thread(struct proc *p, struct proc *parent,int *pid);
+int clean_up_zombie_children(struct proc *procs, void** stack,int *pid);
 void clean_up_zombie_process(struct proc *p, void** stack);
 void reset_process_state(struct proc *p);
 

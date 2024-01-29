@@ -42,6 +42,7 @@ struct proc {
   void *threadstack;           // Address of thread stack to be freed
   enum procstate state;        // Process state
   int pid;                     // Process ID
+  int tid;                     // Thread ID
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process
@@ -51,9 +52,3 @@ struct proc {
   struct inode *cwd;           // Current directory
   char name[16];               // Process name (debugging)
 };
-
-// Process memory is laid out contiguously, low addresses first:
-//   text
-//   original data and bss
-//   fixed-size stack
-//   expandable heap

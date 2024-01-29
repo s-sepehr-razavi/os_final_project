@@ -113,9 +113,9 @@ int thread_create(void (*func)(void *, void *), void* arg1, void* arg2)
   return clone(func, arg1, arg2, stack);
 }
 
-int thread_join()
+int thread_join(int pid)
 {
   void * stackPtr;
-  int x = join(&stackPtr);
+  int x = join(&stackPtr, &pid);
   return x;
 }

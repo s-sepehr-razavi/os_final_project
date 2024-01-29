@@ -533,7 +533,7 @@ procdump(void)
   }
 }
 
-// Clone added
+
 int clone(void (*fcn)(void*, void*), void *arg1, void *arg2, void* stack) {
     struct proc *new_proc;
     struct proc *p = myproc();
@@ -593,44 +593,45 @@ void set_process_runnable(struct proc *new_proc) {
     release(&ptable.lock);
 }
 
-int join(void** stack) {
+
+int join(void** stack,int *pid) {
     struct proc *procs = myproc();
     acquire(&ptable.lock);
 
     for (;;) {
-        if (!has_active_children(procs)) {
+        if (!has_active_children(procs, pid)) {
             release(&ptable.lock);
             return -1; // No active children or the process is killed
         }
 
-        int pid = clean_up_zombie_children(procs, stack);
-        if (pid > 0) {
+        int pid_2 = clean_up_zombie_children(procs, stack, pid);
+        if (pid_2 > 0) {
             release(&ptable.lock);
-            return pid;
+            return pid_2;
         }
 
         sleep(procs, &ptable.lock); // Wait for children to exit
     }
 }
 
-int has_active_children(struct proc *procs) {
+int has_active_children(struct proc *procs,int *pid) {
     struct proc *p;
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-        if (is_child_thread(p, procs)) {
+        if (is_child_thread(p, procs, pid)) {
             return 1; // Active child found
         }
     }
     return 0; // No active children
 }
 
-int is_child_thread(struct proc *p, struct proc *parent) {
-    return p->parent == parent && p->pgdir == parent->pgdir;
+int is_child_thread(struct proc *p, struct proc *parent,int *pid) {
+    return p->parent == parent && p->pgdir == parent->pgdir && p->pid == *pid;
 }
 
-int clean_up_zombie_children(struct proc *procs, void** stack) {
+int clean_up_zombie_children(struct proc *procs, void** stack,int *pid) {
     struct proc *p;
     for (p = ptable.proc; p < &ptable.proc[NPROC]; p++) {
-        if (is_child_thread(p, procs) && p->state == ZOMBIE) {
+        if (is_child_thread(p, procs, pid) && p->state == ZOMBIE) {
             int pid = p->pid;
             clean_up_zombie_process(p, stack);
             return pid;

@@ -107,13 +107,16 @@ int sys_clone(void) {
 
 int sys_join(void) {
     void **stack;
-    int arg;
+    int *pid;
+    int arg1;
+    int arg2;
 
     // Retrieve the stack argument
-    if (argint(0, &arg) < 0) {
+    if (argint(0, &arg1) < 0 || argint(1, &arg2) < 0) {
         return -1; // Error handling in case argument retrieval fails
     }
 
-    stack = (void **)arg;
-    return join(stack);
+    stack = (void **)arg1;
+    pid   = (int *)  arg2;
+    return join(stack,pid);
 }

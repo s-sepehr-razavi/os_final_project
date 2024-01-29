@@ -106,6 +106,7 @@ extern int sys_uptime(void);
 extern int sys_clone(void);
 extern int sys_join(void);
 
+
 static int (*syscalls[])(void) = {
 [SYS_fork]    sys_fork,
 [SYS_exit]    sys_exit,
