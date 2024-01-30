@@ -1,4 +1,4 @@
-# os_final_project# README for XV6 Threading and Scheduling Enhancement Project
+# README for XV6 Threading and Scheduling Enhancement Project
 
 ## Introduction
 This project significantly enhances the xv6 operating system by introducing advanced kernel threading support and a new scheduler. These features elevate xv6's multitasking capabilities and optimize its performance on multi-core systems.
