@@ -42,7 +42,7 @@ struct proc {
   void *threadstack;           // Address of thread stack to be freed
   enum procstate state;        // Process state
   int pid;                     // Process ID
-  int tid;                     // Thread ID
+  int Tflag;                   // Thread Flag
   struct proc *parent;         // Parent process
   struct trapframe *tf;        // Trap frame for current syscall
   struct context *context;     // swtch() here to run process

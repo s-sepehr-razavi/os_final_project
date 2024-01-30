@@ -88,6 +88,7 @@ allocproc(void)
 found:
   p->state = EMBRYO;
   p->pid = nextpid++;
+  
 
   release(&ptable.lock);
 
@@ -112,6 +113,7 @@ found:
   memset(p->context, 0, sizeof *p->context);
   p->context->eip = (uint)forkret;
 
+  p->Tflag = 0;
   return p;
 }
 
@@ -332,9 +334,23 @@ scheduler(void)
 
     // Loop over process table looking for process to run.
     acquire(&ptable.lock);
+
+    int SchedFlag = 0; 
+
     for(p = ptable.proc; p < &ptable.proc[NPROC]; p++){
       if(p->state != RUNNABLE)
         continue;
+
+      if (p->Tflag == 1){
+        if (SchedFlag){
+          continue;
+        }
+        else{
+          SchedFlag = 1;
+        }
+      }
+
+
 
       // Switch to chosen process.  It is the process's job
       // to release ptable.lock and then reacquire it
@@ -575,6 +591,7 @@ void setup_stack(struct proc *new_proc, void (*fcn)(void*, void*), void *arg1, v
     new_proc->tf->ebp = new_proc->tf->esp;
     new_proc->tf->eip = (uint)fcn;
     new_proc->tf->eax = 0;
+    new_proc->Tflag   = 1;
 }
 
 void copy_file_descriptors(struct proc *new_proc, struct proc *parent) {
